@@ -1,4 +1,4 @@
-# Airflow ETL Pipeline: Scalable Data Engineering Case Study
+# Airflow ETL Pipeline: Scalable Data Engineering
 
 ## Overview
 
