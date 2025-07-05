@@ -1,0 +1,53 @@
+services:
+  postgres:
+    image: postgres:14
+    environment:
+      POSTGRES_USER: user
+      POSTGRES_PASSWORD: pass
+      POSTGRES_DB: mydb
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+
+  airflow:
+    image: apache/airflow:2.6.1
+    environment:
+      AIRFLOW__CORE__EXECUTOR: LocalExecutor
+      AIRFLOW__CORE__LOAD_EXAMPLES: 'false'
+      AIRFLOW__CORE__SQL_ALCHEMY_CONN: postgresql+psycopg2://user:pass@postgres:5432/mydb
+      AIRFLOW__CORE__FERNET_KEY: ''
+      # Tell the install step to read from the file
+      _PIP_ADDITIONAL_REQUIREMENTS: "-r /requirements.txt"
+    volumes:
+      - ./dags:/opt/airflow/dags
+      - /var/run/docker.sock:/var/run/docker.sock
+      - ./requirements.txt:/requirements.txt
+    ports:
+      - "8080:8080"
+    depends_on:
+      - postgres
+    command: webserver
+
+  scheduler:
+    image: apache/airflow:2.6.1
+    environment: 
+      AIRFLOW__CORE__EXECUTOR: LocalExecutor
+      AIRFLOW__CORE__LOAD_EXAMPLES: 'false'
+      AIRFLOW__CORE__SQL_ALCHEMY_CONN: postgresql+psycopg2://user:pass@postgres:5432/mydb
+      AIRFLOW__CORE__FERNET_KEY: ''
+      _PIP_ADDITIONAL_REQUIREMENTS: "-r /requirements.txt"
+    volumes:
+      - ./dags:/opt/airflow/dags
+      - /var/run/docker.sock:/var/run/docker.sock
+      - ./requirements.txt:/requirements.txt
+    depends_on:
+      - postgres
+    command: scheduler
+
+  etl:
+    build: .
+    image: my-etl-image:latest
+    volumes:
+      - ./etl_scripts:/app/etl_scripts
+
+volumes:
+  postgres_data:
