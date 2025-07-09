@@ -1,3 +1,5 @@
+version: '3.8'
+
 services:
   postgres:
     image: postgres:14
@@ -48,6 +50,21 @@ services:
     image: my-etl-image:latest
     volumes:
       - ./etl_scripts:/app/etl_scripts
+    command: tail -f /dev/null
+
+  jupyter:
+    build: .
+    image: my-etl-image:latest
+    environment:
+      DATABASE_URL: postgresql://user:pass@postgres:5432/mydb
+    volumes:
+      - ./etl_scripts:/app/etl_scripts
+      - ./notebooks:/app/notebooks
+    ports:
+      - "8888:8888"
+    command: jupyter notebook --ip=0.0.0.0 --port=8888 --no-browser --allow-root
+    depends_on:
+      - postgres
 
 volumes:
   postgres_data:
